@@ -3342,6 +3342,15 @@ if (this.p.isFlying || this.p.isUfo) {
       return this.p.yVelocity < p;
     }
   }
+  _gravBaseForSpeed() {
+    if (window.speedGravity === false) return p;
+    if (typeof SpeedPortal === 'undefined' || typeof playerSpeed !== 'number') return p;
+    const sp = playerSpeed;
+    if (sp <= (SpeedPortal.HALF + SpeedPortal.ONE_TIMES) / 2) return 1.880398;
+    if (sp <= (SpeedPortal.ONE_TIMES + SpeedPortal.TWO_TIMES) / 2) return p;
+    if (sp <= (SpeedPortal.TWO_TIMES + SpeedPortal.THREE_TIMES) / 2) return 1.914398;
+    return 1.922398;
+  }
   _applySlopeJumpBoost() {
     if (window.slopeJumpBoost === false) return;
     if (this._slopeExitVel === null || this._slopeExitVel === undefined) return;
@@ -3392,7 +3401,7 @@ if (this.p.isFlying || this.p.isUfo) {
       this._applySlopeJumpBoost();
       this.runRotateAction();
     } else if (this.p.isJumping) {
-      this.p.yVelocity -= p * _0x3d1c6f * this.flipMod();
+      this.p.yVelocity -= this._gravBaseForSpeed() * _0x3d1c6f * this.flipMod();
       if (this.playerIsFalling()) {
         this.p.isJumping = false;
         this.p.onGround = false;
@@ -3401,7 +3410,7 @@ if (this.p.isFlying || this.p.isUfo) {
       if (this.playerIsFalling()) {
         this.p.canJump = false;
       }
-      this.p.yVelocity -= p * _0x3d1c6f * this.flipMod();
+      this.p.yVelocity -= this._gravBaseForSpeed() * _0x3d1c6f * this.flipMod();
       if (this.p.gravityFlipped) {
         this.p.yVelocity = Math.min(this.p.yVelocity, 30);
       } else {
@@ -3580,8 +3589,8 @@ if (this.p.isFlying || this.p.isUfo) {
     const robotJumpInit = 10.25 * robotMiniJumpScale;
     const robotHoldMax = 15.5;
     const robotHoldForce = p * 0.2 * robotMiniJumpScale;
-    const robotGravityHold = p * 0.15;
-    const robotGravityFall = p * 0.81;
+    const robotGravityHold = this._gravBaseForSpeed() * (window.robotGravHold !== undefined ? window.robotGravHold : 0.15);
+    const robotGravityFall = this._gravBaseForSpeed() * (window.robotGravMult !== undefined ? window.robotGravMult : 0.9);
     const robotReleaseCut = 0.9;
     const robotReleaseMinTime = 0;
     const robotMaxFall = 28;
@@ -3652,9 +3661,12 @@ if (this.p.isFlying || this.p.isUfo) {
   }
   _updateUfoJump(_dt) {
     const _ufoJump = this.p.isMini ? 13.296 : 13.742;
+    const _ufoMini = window.ufoMiniDiv !== undefined ? window.ufoMiniDiv : 0.85;
+    const _ufoFastBase = window.ufoFastGrav !== undefined ? window.ufoFastGrav : 0.6;
+    const _ufoSlowBase = window.ufoSlowGrav !== undefined ? window.ufoSlowGrav : 0.5;
     const _ufoThreshold = 3.832796;
-    const _ufoFastGrav = this.p.isMini ? 0.634524 : 0.540121;
-    const _ufoSlowGrav = this.p.isMini ? 0.421624 : 0.359973;
+    const _ufoFastGrav = this.p.isMini ? _ufoFastBase / _ufoMini : _ufoFastBase;
+    const _ufoSlowGrav = this.p.isMini ? _ufoSlowBase / _ufoMini : _ufoSlowBase;
     const _ufoUpVel = this.p.yVelocity * this.flipMod();
     const _ufoGrav = _ufoUpVel > _ufoThreshold ? _ufoFastGrav : _ufoSlowGrav;
     this.p.yVelocity -= p * _ufoGrav * _dt * this.flipMod();
