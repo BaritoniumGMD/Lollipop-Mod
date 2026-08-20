@@ -6162,6 +6162,9 @@ _buildSettingsPopup() {
     */
     const updateEntries = [
       { text: "Update Log", scale: 1, font: "goldFont" },
+      { text: "Slopes OVERHAULED", scale: 0.75, color: 0xff9944 },
+      { text: "Bug reports are appreciated", scale: 0.75, },
+      { text: "-Bari", scale: 0.75, },
       { text: "Credits menu fixed :3", scale: 0.75, },
       { text: "Small Icon Kit changes", scale: 0.75, },
       { text: "Low Detail Mode", scale: 0.75, },
@@ -6178,9 +6181,6 @@ _buildSettingsPopup() {
       { text: "Breakable blocks break now.", scale: 0.75, },
       { text: "Fixed objects not showing in editor", scale: 0.65, },
       { text: "^ I, Amethyst, did all this btw. ^", scale: 0.6, color: 0x9966cc},
-      { text: "Slopes (very buggy)", scale: 0.75, color: 0xff9944 },
-      { text: "THEY WILL BE FIXED-", scale: 0.75, },
-      { text: "OVER TIME.", scale: 0.75, },
       { text: "Slopes work in imported-", scale: 0.75, },
       { text: "levels now (thanks lasokadadyy)", scale: 0.7, },
       { text: "Fixed SOME objects", scale: 0.75 },
