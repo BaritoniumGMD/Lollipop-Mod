@@ -11,29 +11,31 @@ class Collider {
     this.slopeDir = 1;
     this.slopeIsFilled = false;
     this.slopeFlipY = false;
+    this.hypoAx = 0; this.hypoAy = 0;
+    this.hypoBx = 0; this.hypoBy = 0;
+    this.rightAx = 0; this.rightAy = 0;
+    this.slopeSolidBelow = true;
   }
   getSlopeSurfaceY(worldX) {
     if (this.type !== slopeType) return null;
-    const halfW = this.w / 2;
-    const left = this.x - halfW;
-    const right = this.x + halfW;
-    if (worldX < left || worldX > right) return null;
-    const frac = (worldX - left) / (right - left);
-    let surfaceFrac = this.slopeDir > 0 ? frac : (1 - frac);
-    if (this.slopeFlipY) surfaceFrac = 1 - surfaceFrac;
-    return (this.y - this.h / 2) + surfaceFrac * this.h;
+    const ax = this.x + this.hypoAx, ay = this.y + this.hypoAy;
+    const bx = this.x + this.hypoBx, by = this.y + this.hypoBy;
+    const lo = ax <= bx ? { x: ax, y: ay } : { x: bx, y: by };
+    const hi = ax <= bx ? { x: bx, y: by } : { x: ax, y: ay };
+    if (hi.x - lo.x < 0.01) return null;
+    if (worldX < lo.x || worldX > hi.x) return null;
+    const t = (worldX - lo.x) / (hi.x - lo.x);
+    return lo.y + t * (hi.y - lo.y);
   }
   getSlopeAngleRad() {
-    let angleDeg = this.slopeAngleDeg;
-    if (this.slopeDir < 0) angleDeg = -angleDeg;
-    if (this.slopeFlipY) angleDeg = -angleDeg;
-    return angleDeg * Math.PI / 180;
+    if (this.type !== slopeType) return 0;
+    return Math.atan2(this.hypoBy - this.hypoAy, this.hypoBx - this.hypoAx);
   }
   usesFloorLanding(gravityFlipped) {
     return this.isSolidBelowSurface(gravityFlipped);
   }
   isSolidBelowSurface(gravityFlipped) {
-    return this.slopeFlipY === gravityFlipped;
+    return this.slopeSolidBelow !== gravityFlipped;
   }
   isSlopeSolidAt(worldX, worldY, gravityFlipped = false) {
     if (this.type !== slopeType) return false;
@@ -209,6 +211,9 @@ const _SLOPE_DATA = {
   294:{gw:1,gh:1,angle:45,sq:false},295:{gw:2,gh:1,angle:22.5,sq:false},
   296:{gw:0.367,gh:0.433,angle:45,sq:true},297:{gw:0.967,gh:0.45,angle:45,sq:true},
   299:{gw:1,gh:1,angle:45,sq:false},301:{gw:2,gh:1,angle:22.5,sq:false},
+  305:{gw:1,gh:1,angle:45,sq:false},307:{gw:2,gh:1,angle:22.5,sq:false},
+  349:{gw:1,gh:1,angle:45,sq:false},351:{gw:2,gh:1,angle:22.5,sq:false},
+  673:{gw:1,gh:1,angle:45,sq:false},674:{gw:2,gh:1,angle:22.5,sq:false},
   309:{gw:1,gh:1,angle:45,sq:false},311:{gw:2,gh:1,angle:22.5,sq:false},
   315:{gw:1,gh:1,angle:45,sq:false},317:{gw:2,gh:1,angle:22.5,sq:false},
   321:{gw:1,gh:1,angle:45,sq:false},323:{gw:2,gh:1,angle:22.5,sq:false},
@@ -355,20 +360,91 @@ function _resolveSlopeOrientation(objectDef, levelObj) {
   return { dir, flipY };
 }
  
+function _gdSlopeType(flipX, flipY, rotationDegrees) {
+  const rot = (parseInt(rotationDegrees, 10) || 0) % 360;
+  const fx = !!flipX, fy = !!flipY;
+  const r0 = rot === 0;
+  const r180 = Math.abs(rot) === 180;
+  const r90 = rot === 90 || rot === -270;
+  const r270 = rot === -90 || rot === 270;
+  if (!fx && !fy) return r0 ? 0 : r90 ? 4 : r180 ? 3 : r270 ? 5 : null;
+  if (!fx && fy)  return r0 ? 1 : r90 ? 7 : r180 ? 2 : r270 ? 6 : null;
+  if (fx && !fy)  return r0 ? 2 : r90 ? 6 : r180 ? 1 : r270 ? 7 : null;
+  return            r0 ? 3 : r90 ? 5 : r180 ? 0 : r270 ? 4 : null;
+}
+
+function _gdSlopeSolidAbove(type) {
+  return type !== null && type < 7 && ((0x6a >> type) & 1) !== 0;
+}
+function _gdSlopeWallOnLeft(type) {
+  return type !== null && ((type - 2) >>> 0 < 3 || type === 6);
+}
+
+const _SLOPE_DECO_RANGES = [
+  [681, 708], [713, 716], [730, 763], [771, 772], [826, 829], [877, 878],
+  [888, 961], [969, 970], [1014, 1015], [1033, 1034], [1037, 1038],
+  [1041, 1092], [1108, 1188], [1198, 1199], [1256, 1306], [1316, 1317],
+  [1758, 1900]
+];
+
+function _isDecorationSlopeId(id) {
+  const n = parseInt(id, 10);
+  if (!Number.isFinite(n)) return false;
+  for (const [lo, hi] of _SLOPE_DECO_RANGES) {
+    if (n >= lo && n <= hi) return true;
+  }
+  return false;
+}
+
+function rotateSlopePoint(localX, localY, rotDeg) {
+  const theta = -rotDeg * Math.PI / 180;
+  const cosT = Math.cos(theta), sinT = Math.sin(theta);
+  return { x: localX * cosT - localY * sinT, y: localX * sinT + localY * cosT };
+}
+
 function _createSlopeCollider(levelObj, objectDef, worldX, worldY) {
   const slopeData = _SLOPE_DATA[levelObj.id];
   if (!slopeData) return null;
-  const rot90 = Math.round((((levelObj.rot || 0) % 360) + 360) % 360 / 90) % 4;
-  const steep = rot90 === 1 || rot90 === 3;
-  const w = (steep ? slopeData.gh : slopeData.gw) * a;
-  const h = (steep ? slopeData.gw : slopeData.gh) * a;
+  if (slopeData.sq) return null;
+  if (_isDecorationSlopeId(levelObj.id)) return null;
+  const _scaleRaw = Number(levelObj.scale);
+  const _scale = Number.isFinite(_scaleRaw) && _scaleRaw > 0 ? _scaleRaw : 1;
+  const hw0 = (slopeData.gw * a * _scale) / 2;
+  const hh0 = (slopeData.gh * a * _scale) / 2;
+  let vRight = { x: hw0, y: -hh0 };
+  let vLo = { x: -hw0, y: -hh0 };
+  let vHi = { x: hw0, y: hh0 };
+  const fx = levelObj.flipX ? -1 : 1;
+  const fy = levelObj.flipY ? -1 : 1;
+  const flip = pt => ({ x: pt.x * fx, y: pt.y * fy });
+  vRight = flip(vRight); vLo = flip(vLo); vHi = flip(vHi);
+  const rotDeg = levelObj.rot || 0;
+  vRight = rotateSlopePoint(vRight.x, vRight.y, rotDeg);
+  vLo = rotateSlopePoint(vLo.x, vLo.y, rotDeg);
+  vHi = rotateSlopePoint(vHi.x, vHi.y, rotDeg);
+  const xs = [vRight.x, vLo.x, vHi.x];
+  const ys = [vRight.y, vLo.y, vHi.y];
+  const w = Math.max(...xs) - Math.min(...xs);
+  const h = Math.max(...ys) - Math.min(...ys);
   const collider = new Collider(slopeType, worldX, worldY, w, h, 0);
   collider.objid = levelObj.id;
+  collider.hypoAx = vLo.x; collider.hypoAy = vLo.y;
+  collider.hypoBx = vHi.x; collider.hypoBy = vHi.y;
+  collider.rightAx = vRight.x; collider.rightAy = vRight.y;
+  const hypoDx = vHi.x - vLo.x;
+  collider.slopeSolidBelow = Math.abs(hypoDx) < 0.01
+    ? vRight.x < vLo.x
+    : vRight.y < (vLo.y + ((vRight.x - vLo.x) / hypoDx) * (vHi.y - vLo.y));
+  const rot90 = Math.round(((rotDeg % 360) + 360) % 360 / 90) % 4;
+  const steep = rot90 === 1 || rot90 === 3;
   collider.slopeAngleDeg = steep ? (90 - slopeData.angle) : slopeData.angle;
-  const { dir, flipY } = _resolveSlopeOrientation(objectDef, levelObj);
+  const { dir } = _resolveSlopeOrientation(objectDef, levelObj);
   collider.slopeDir = dir;
-  collider.slopeFlipY = flipY;
+  collider.slopeFlipY = !collider.slopeSolidBelow;
   collider.slopeIsFilled = slopeData.sq;
+  collider.slopeType = _gdSlopeType(levelObj.flipX, levelObj.flipY, levelObj.rot);
+  collider.gdSolidAbove = _gdSlopeSolidAbove(collider.slopeType);
+  collider.gdWallOnLeft = _gdSlopeWallOnLeft(collider.slopeType);
   return collider;
 }
 
