@@ -2287,7 +2287,7 @@ window.LevelObject = class LevelObject {
   const objectId = parseInt(levelObj.id ?? 0, 10);
   const secretCoinSlot = objectId === SECRET_COIN_OBJECT_ID ? this._secretCoinSlotCount++ : null;
   const userCoinSlot = objectId === USER_COIN_OBJECT_ID ? this._userCoinSlotCount++ : null;
-  const sawObjectIds = new Set([183, 184, 185, 186, 187, 188, 397, 398, 399, 678, 679, 680, 740, 741, 742, 1619, 1620, 1708, 1709, 1710, 1734, 1735, 1736, 85, 86, 87, 97, 137, 138, 139, 154, 155, 156, 180, 181, 182, 1019, 1020, 1021, 1058, 1059, 1060, 1061, 1752, 396, 395, 222, 223, 224, 997, 998, 999, 1000, 1055, 1056, 1057, 394, 375, 376, 377, 378]);
+  const sawObjectIds = new Set([183, 184, 185, 186, 187, 188, 397, 398, 399, 678, 679, 680, 740, 741, 742, 1619, 1620, 1708, 1709, 1710, 1734, 1735, 1736, 85, 86, 87, 97, 137, 138, 139, 154, 155, 156, 180, 181, 182, 1019, 1020, 1021, 1058, 1059, 1060, 1061, 1752, 396, 395, 222, 223, 224, 997, 998, 999, 1000, 1055, 1056, 1057, 394, 375, 376, 377, 378, 677, 676, 675]);
   const fastSawObjectIds = new Set([186, 187, 188, 89, 88, 98, 183, 185, 184, 397, 398, 399, 678, 679, 680, 740, 741, 742, 1619, 1620, 1705, 1706, 1707, 1708, 1709, 1710, 1734, 1735, 1736]);
   const isSawObjectId = sawObjectIds.has(objectId);
   const isFastSawObjectId = fastSawObjectIds.has(objectId);
