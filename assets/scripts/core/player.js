@@ -43,9 +43,9 @@ class PlayerState {
     this._spiderTeleportNoclipDeathPending = false;
     this.ballShouldRotate = false;
     this.ballRotateOpposite = false;
-    this.ballNormalRotate = 1;
+    this.ballNormalRotate = 0.86;
     this.ballHitPad = false;
-    this.ballRotation2 = 0;
+    this.ballRotation2 = 0.86;
   }
 }
 
@@ -877,7 +877,7 @@ class PlayerObject {
     this._spiderDashEffectTimer = Math.max(0, this._spiderDashEffectTimer - Math.max(0, dt || 0));
     const progress = Math.max(0, Math.min(1, (duration - this._spiderDashEffectTimer) / duration));
     const frameIndex = Math.min(8, Math.max(1, Math.floor(progress * 8) + 1));
-    const frameName = `spiderDash_${String(frameIndex).padStart(3, "0")}.png`;
+      const frameName = `spiderDash_${String(frameIndex).padStart(3, "0")}.png`;
     if (_textureHasFrameSafe(this._scene, "GJ_GameSheet04", frameName)) {
       this._spiderDashEffectSprite.setTexture("GJ_GameSheet04", frameName);
     }
@@ -1187,7 +1187,7 @@ class PlayerObject {
     const visibleFade = Math.min(fade, fadeIn);
     this._robotJumpFlamePulse = (this._robotJumpFlamePulse || 0) + Math.max(0, dt || 0) * (Math.PI * 4);
     const pulse = (Math.sin(this._robotJumpFlamePulse) + 1) * 0.5;
-    const stretchY = 0.8 + 0.4 * pulse;
+    const stretchY = 0.7 + 0.4 * pulse;
     const overallScale = 0.82 * miniScale * visibleFade;
     this._robotJumpFlameSprite.setPosition(
       this._robotJumpFlameAnchorX,
@@ -1218,6 +1218,22 @@ class PlayerObject {
       this._robotJumpFlameAnchorX = baseX;
       this._robotJumpFlameAnchorY = baseY + (this.p.gravityFlipped ? (-8 * (this.p.isMini ? 0.6 : 1)) : (8 * (this.p.isMini ? 0.6 : 1)));
     }
+  }
+
+  _defaultMiniIcon() {
+    const usedefaultMiniIcon = window.enableMiniIcon === true && this.p.isMini;
+    const updateFrame = (layer, frameName) => {
+      if (!layer?.sprite || layer.sprite._defaultMiniIconFrame === frameName) return;
+      const atlasData = getAtlasFrame(this._scene, frameName);
+      if (!atlasData) return;
+      layer.sprite.setTexture(atlasData.atlas, atlasData.frame);
+      layer.sprite._defaultMiniIconFrame = frameName;
+    };
+
+    updateFrame(this._playerSpriteLayer, usedefaultMiniIcon ? "player_00_001.png" : `${window.currentPlayer}_001.png`);
+    updateFrame(this._playerOverlayLayer, usedefaultMiniIcon ? "player_00_2_001.png" : `${window.currentPlayer}_2_001.png`);
+    updateFrame(this._ballSpriteLayer, usedefaultMiniIcon ? "player_ball_00_001.png" : `${window.currentBall}_001.png`);
+    updateFrame(this._ballOverlayLayer, usedefaultMiniIcon ? "player_ball_00_2_001.png" : `${window.currentBall}_2_001.png`);
   }
 
   _createSprites() {
@@ -1787,6 +1803,7 @@ class PlayerObject {
     if (this._endAnimating) {
       return;
     }
+    this._defaultMiniIcon();
     const _0x7f0705 = mirrorOffset !== undefined ? mirrorOffset : centerX;
     const _0x1a433c = b(this.p.y) + cameraY;
     const playerRotation = this._rotation;
@@ -1846,15 +1863,35 @@ if (this.p.isFlying || this.p.isUfo) {
         }
       }
       if (_ufoMode) {
-        const _ufoTilt = Math.max(-0.05, Math.min(0.05, -(this.p.y - this.p.lastY) * 0.008));
+        const _ufotilt = Math.max(-0.1, Math.min(3, (this.p.y - this.p.lastY) * 0.015));
+        const targetuforotation = this.p.mirrored ? -_ufotilt : _ufotilt;
+        if (!Number.isFinite(this._uforotation)) this._uforotation = targetuforotation;
+        const rotationmix = Math.min(1, Math.max(0, (_0x3afedf || 0) * 8.5));
+        this._uforotation += (targetuforotation - this._uforotation) * rotationmix;
+        this._uforotation = Math.max(-0.11, Math.min(3, this._uforotation));
+        const uforotation = this._uforotation;
+        const currentRotation = this.p.mirrored ? -playerRotation : playerRotation;
+        const birdX = _0x7f0705 + _0x1b1d28;
+        const birdY = _0x1a433c + _0x185f91 + (this.p.gravityFlipped ? -15 : 5);
+        const cubeX = _0x7f0705 + _0x562424;
+        const cubeY = (_0x1a433c + _0x3011c9) + (this.p.isMini ? (8 * _miniS) : 0) + (this.p.gravityFlipped ? (-20 * _miniS) : 0);
+        const offsetX = cubeX - birdX;
+        const offsetY = cubeY - birdY;
+        const rotationDelta = uforotation - currentRotation;
+        const cosDelta = Math.cos(rotationDelta);
+        const sinDelta = Math.sin(rotationDelta);
+        const attachedCubeX = birdX + offsetX * cosDelta - offsetY * sinDelta;
+        const attachedCubeY = birdY + offsetX * sinDelta + offsetY * cosDelta;
         for (const layer of this._birdLayers) {
           if (layer) {
-            layer.sprite.rotation = this.p.mirrored ? -_ufoTilt : _ufoTilt;
+            layer.sprite.rotation = uforotation;
           }
         }
 		  for (const playerLayerItem of this._playerLayers) {
           if (playerLayerItem) {
-            playerLayerItem.sprite.rotation = this.p.mirrored ? -_ufoTilt : _ufoTilt;
+            playerLayerItem.sprite.x = attachedCubeX;
+            playerLayerItem.sprite.y = attachedCubeY;
+            playerLayerItem.sprite.rotation = uforotation;
           }
         }
       }
@@ -2030,9 +2067,9 @@ if (this.p.isFlying || this.p.isUfo) {
     this.p.isBall = true;
     this.p.ballShouldRotate = false;
     this.p.ballRotateOpposite = false;
-    this.p.ballNormalRotate = 1;
+    this.p.ballNormalRotate = 0.86;
     this.p.ballHitPad = false;
-    this.p.ballRotation2 = 0;
+    this.p.ballRotation2 = 0.86;
     this.p.onGround = false;
     this.p.canJump = false;
     this.p.isJumping = false;
@@ -2054,9 +2091,9 @@ if (this.p.isFlying || this.p.isUfo) {
     this.p.isBall = false;
     this.p.ballShouldRotate = false;
     this.p.ballRotateOpposite = false;
-    this.p.ballNormalRotate = 1;
+    this.p.ballNormalRotate = 0.86;
     this.p.ballHitPad = false;
-    this.p.ballRotation2 = 0;
+    this.p.ballRotation2 = 0.86;
     this.p.onGround = false;
     this.p.canJump = false;
     this.p.isJumping = false;
@@ -2326,6 +2363,72 @@ if (this.p.isFlying || this.p.isUfo) {
       }
     }
   }
+  _getparticlecolor(gameObj) {
+    if (Number.isFinite(Number(gameObj?.particleColor))) {
+      return Number(gameObj.particleColor);
+    }
+    if (gameObj?.userCoinId !== undefined) return 0xd0d0d0;
+    if (gameObj?.coinId !== undefined) return 0xffff00;
+    const colororb = {
+      35: 0xffff00,
+      36: 0xffff00,
+      67: 0x00ffff,
+      84: 0x00ffff,
+      1022: 0x00ff00,
+      1330: 0x000000,
+      1332: 0xff0000,
+      1333: 0xff0000,
+      140: 0xff00ff,
+      141: 0xff00ff,
+      1704: 0x00ff00,
+      1751: 0xff00ff
+    };
+    return colororb[Number(gameObj?.padId ?? gameObj?.orbId)] ?? this._primaryColor();
+  }
+
+  _orbpadHitEffect(gameObj) {
+    if (!gameObj || this._scene?._editorPlaytestActive || window.enableLDM) return;
+
+    const scene = this._scene;
+    const worldX = Number(gameObj.x);
+    const worldY = Number(gameObj.y);
+    if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) return;
+
+    const color = this._getparticlecolor(gameObj);
+    const isPad = gameObj.type === jumpPadType;
+    const maxRadius = isPad ? 82 : 68;
+    const graphics = scene.add.graphics().setDepth(15).setBlendMode(S);
+    this._gameLayer.topContainer.add(graphics);
+    const followObject = () => {
+      const currentX = Number(gameObj.x);
+      const currentY = Number(gameObj.y);
+      if (Number.isFinite(currentX) && Number.isFinite(currentY)) {
+        graphics.setPosition(currentX, b(currentY));
+      }
+    };
+    followObject();
+    scene.events.on("postupdate", followObject);
+    const state = { progress: 0 };
+
+    scene.tweens.add({
+      targets: state,
+      progress: 1,
+      duration: 300,
+      ease: "Quad.Out",
+      onUpdate: () => {
+        const radius = 10 + state.progress * (maxRadius - 10);
+        const alpha = Math.max(0, 1 - state.progress);
+        graphics.clear();
+        graphics.setAlpha(1);
+        graphics.fillStyle(color, alpha);
+        graphics.fillCircle(0, 0, radius);
+      },
+      onComplete: () => {
+        scene.events.off("postupdate", followObject);
+        graphics.destroy();
+      }
+    });
+  }
   killPlayer() {
     if (this.p.isDead || this._scene._macroBot?.playing) {
       return;
@@ -2406,17 +2509,18 @@ if (this.p.isFlying || this.p.isUfo) {
     const _0x4683eb = {
       t: 0
     };
+    const shrink = false;
     this._deathFlashTween = _0x3f4b84.tweens.add({
       targets: _0x4683eb,
       t: 1,
-      duration: 500,
-      ease: "Quad.Out",
+      duration: 300,
+      ease: shrink ? "Quad.In" : "Quad.Out",
       onUpdate: () => {
-        const _0x39f32 = 18 + _0x4683eb.t * 144;
-        const _0xc8c1 = 1 - _0x4683eb.t;
+        const radius = (shrink ? 90 : 14) + _0x4683eb.t * (shrink ? -76 : 76);
+        const alpha = Math.max(0, 1 - _0x4683eb.t * _0x4683eb.t);
         _0x438d80.clear();
-        _0x438d80.fillStyle(this._primaryColor(), _0xc8c1);
-        _0x438d80.fillCircle(_0x3f0446, _0x53ac5b, _0x39f32);
+        _0x438d80.fillStyle(this._primaryColor(), alpha);
+        _0x438d80.fillCircle(_0x3f0446, _0x53ac5b, radius);
       },
       onComplete: () => {
         if (this._deathFlashGraphics === _0x438d80) {
@@ -2918,7 +3022,7 @@ if (this.p.isFlying || this.p.isUfo) {
   }
   _getSlopeHitSize(playerSize, waveHitSize) {
     return this.p.isWave ? waveHitSize : playerSize;
-  }
+ }
   _slopeRideY(gameObj, surfaceY, angle, playerSize, above) {
     return above ? surfaceY + playerSize : surfaceY - playerSize;
   }
@@ -3161,7 +3265,6 @@ if (this.p.isFlying || this.p.isUfo) {
       this.runRotateAction();
     }
   }
-
   _checkSnapJump(_0x1f801b) {
     const _0x483058 = [{
       dx: 240,
@@ -3300,13 +3403,13 @@ if (this.p.isFlying || this.p.isUfo) {
       rollDir = -rollDir;
     }
     const groundSpeedFactor = 0.48;
-    let airSpeedFactor = this.p.ballRotateOpposite ? 0.27 : 0.48;
+    let airSpeedFactor = this.p.ballRotateOpposite ? 0.27 : 0.35;
     if (this.p.isDashing) {
       const dashSpeed = Math.abs(this.p.dashYVelocity || this.p.yVelocity || 0);
       const speedScale = Math.max(0.15, Math.min(1, dashSpeed / 24));
       airSpeedFactor = 0.32 + speedScale * 0.32;
     } else if (this.p.ballHitPad) {
-      airSpeedFactor *= 1.2;
+      airSpeedFactor *= 1.25;
     }
     const speedFactor = onSurface ? groundSpeedFactor : airSpeedFactor;
     let bidenblast= 1;
@@ -3342,16 +3445,7 @@ if (this.p.isFlying || this.p.isUfo) {
       return this.p.yVelocity < p;
     }
   }
-  _gravBaseForSpeed() {
-    if (window.speedGravity === false) return p;
-    if (typeof SpeedPortal === 'undefined' || typeof playerSpeed !== 'number') return p;
-    const sp = playerSpeed;
-    if (sp <= (SpeedPortal.HALF + SpeedPortal.ONE_TIMES) / 2) return 1.880398;
-    if (sp <= (SpeedPortal.ONE_TIMES + SpeedPortal.TWO_TIMES) / 2) return p;
-    if (sp <= (SpeedPortal.TWO_TIMES + SpeedPortal.THREE_TIMES) / 2) return 1.914398;
-    return 1.922398;
-  }
-  _applySlopeJumpBoost() {
+    _applySlopeJumpBoost() {
     if (window.slopeJumpBoost === false) return;
     if (this._slopeExitVel === null || this._slopeExitVel === undefined) return;
     const base = this.p.yVelocity;
@@ -3364,6 +3458,15 @@ if (this.p.isFlying || this.p.isUfo) {
     if (dir > 0) { if (v > cap) v = cap; }
     else { if (v < cap) v = cap; }
     this.p.yVelocity = v;
+  }
+    _gravBaseForSpeed() {
+    if (window.speedGravity === false) return p;
+    if (typeof SpeedPortal === 'undefined' || typeof playerSpeed !== 'number') return p;
+    const sp = playerSpeed;
+    if (sp <= (SpeedPortal.HALF + SpeedPortal.ONE_TIMES) / 2) return 1.880398;
+    if (sp <= (SpeedPortal.ONE_TIMES + SpeedPortal.TWO_TIMES) / 2) return p;
+    if (sp <= (SpeedPortal.TWO_TIMES + SpeedPortal.THREE_TIMES) / 2) return 1.914398;
+    return 1.922398;
   }
   updateJump(_0x3d1c6f) {
     if (this.p.pendingVelocity !== null) {
@@ -3401,7 +3504,7 @@ if (this.p.isFlying || this.p.isUfo) {
       this._applySlopeJumpBoost();
       this.runRotateAction();
     } else if (this.p.isJumping) {
-      this.p.yVelocity -= this._gravBaseForSpeed() * _0x3d1c6f * this.flipMod();
+      this.p.yVelocity -= p * _0x3d1c6f * this.flipMod();
       if (this.playerIsFalling()) {
         this.p.isJumping = false;
         this.p.onGround = false;
@@ -3410,7 +3513,7 @@ if (this.p.isFlying || this.p.isUfo) {
       if (this.playerIsFalling()) {
         this.p.canJump = false;
       }
-      this.p.yVelocity -= this._gravBaseForSpeed() * _0x3d1c6f * this.flipMod();
+      this.p.yVelocity -= p * _0x3d1c6f * this.flipMod();
       if (this.p.gravityFlipped) {
         this.p.yVelocity = Math.min(this.p.yVelocity, 30);
       } else {
@@ -3529,10 +3632,10 @@ if (this.p.isFlying || this.p.isUfo) {
         this.p.onGround = false;
         this.p.canJump = false;
         this.p.yVelocity *= 0.6;
-        this._skipSlopeExit = true;
+         this._skipSlopeExit = true;
         return;
       }
-
+      
       if (this.playerIsFalling()) {
         this.p.canJump = false;
       }
@@ -3589,8 +3692,8 @@ if (this.p.isFlying || this.p.isUfo) {
     const robotJumpInit = 10.25 * robotMiniJumpScale;
     const robotHoldMax = 15.5;
     const robotHoldForce = p * 0.2 * robotMiniJumpScale;
-    const robotGravityHold = this._gravBaseForSpeed() * (window.robotGravHold !== undefined ? window.robotGravHold : 0.15);
-    const robotGravityFall = this._gravBaseForSpeed() * (window.robotGravMult !== undefined ? window.robotGravMult : 0.9);
+    const robotGravityHold = p * 0.15;
+    const robotGravityFall = p * 0.81;
     const robotReleaseCut = 0.9;
     const robotReleaseMinTime = 0;
     const robotMaxFall = 28;
@@ -3662,8 +3765,8 @@ if (this.p.isFlying || this.p.isUfo) {
   _updateUfoJump(_dt) {
     const _ufoJump = this.p.isMini ? 13.296 : 13.742;
     const _ufoMini = window.ufoMiniDiv !== undefined ? window.ufoMiniDiv : 0.85;
-    const _ufoFastBase = window.ufoFastGrav !== undefined ? window.ufoFastGrav : 0.6;
-    const _ufoSlowBase = window.ufoSlowGrav !== undefined ? window.ufoSlowGrav : 0.5;
+    const _ufoFastBase = window.ufoFastGrav !== undefined ? window.ufoFastGrav : 0.525;
+    const _ufoSlowBase = window.ufoSlowGrav !== undefined ? window.ufoSlowGrav : 0.425;
     const _ufoThreshold = 3.832796;
     const _ufoFastGrav = this.p.isMini ? _ufoFastBase / _ufoMini : _ufoFastBase;
     const _ufoSlowGrav = this.p.isMini ? _ufoSlowBase / _ufoMini : _ufoSlowBase;
@@ -4111,6 +4214,9 @@ if (this.p.isFlying || this.p.isUfo) {
           continue;
         }
         const makeportalguide = (_colType.startsWith("portal_") || _colType === "speed") && !this._isObjectActivated(gameObj) && window.enablePortalGuide !== false;
+        if (this._isPortalCollisionType(_colType) && !this._isObjectActivated(gameObj)) {
+          this._orbpadHitEffect(gameObj);
+        }
         if (_colType === "portal_teleport") {
           if (!this._isObjectActivated(gameObj)) {
             this._setObjectActivated(gameObj, true);
@@ -4233,7 +4339,6 @@ if (this.p.isFlying || this.p.isUfo) {
             if (this.p.isBall) {
               this.p.ballShouldRotate = true;
               this.p.ballRotateOpposite = true;
-              this.p.ballRotation2 = 10;
             }
             this.flipGravity(false, 0.5);
           }
@@ -4244,7 +4349,6 @@ if (this.p.isFlying || this.p.isUfo) {
             if (this.p.isBall) {
               this.p.ballShouldRotate = true;
               this.p.ballRotateOpposite = true;
-              this.p.ballRotation2 = 10;
             }
             this.flipGravity(true, 0.5);
           }
@@ -4255,7 +4359,6 @@ if (this.p.isFlying || this.p.isUfo) {
             if (this.p.isBall) {
               this.p.ballShouldRotate = true;
               this.p.ballRotateOpposite = true;
-              this.p.ballRotation2 = 10;
             }
             this.flipGravity(!this.p.gravityFlipped, 0.5);
           }
@@ -4313,6 +4416,7 @@ if (this.p.isFlying || this.p.isUfo) {
         } else if (_colType === jumpPadType) {
           if (!this._isObjectActivated(gameObj)) {
             this._setObjectActivated(gameObj, true);
+            this._orbpadHitEffect(gameObj);
             const _padId = gameObj.padId;
             if (_padId === 67) {
               const now = Date.now();
@@ -4408,6 +4512,7 @@ if (this.p.isFlying || this.p.isUfo) {
           const _needsClick = !_orbInputConsumedThisStep && !this.p._orbActivationConsumedForPress && ((this.p.isFlying || this.p.isUfo) ? justPressed : (justPressed || (this.p.queuedHold && this.p.upKeyDown)));
           this.p.touchingRing = true;
           if (!this._isObjectActivated(gameObj) && _needsClick) {
+            this._orbpadHitEffect(gameObj, true);
             if (_isDash) {
               const dashHoldTicks = this._getDashHoldTicks(gameObj) + 1;
               this._setDashHoldTicks(gameObj, dashHoldTicks);
@@ -4438,7 +4543,7 @@ if (this.p.isFlying || this.p.isUfo) {
                   this.p.ballShouldRotate = true;
                   this.p.ballRotateOpposite = false;
                   this.p.ballHitPad = true;
-                  this.p.ballRotation2 = 10;
+                  this.p.ballRotation2 = 0;
                 }
                 this.runRotateAction();
                 _boostedThisStep = true;
@@ -4505,8 +4610,8 @@ if (this.p.isFlying || this.p.isUfo) {
                     if (_orbId === 36) { _orbVel = _ballBase; }
                     else if (_orbId === 141) { _orbVel = _ballBase * 0.77; }
                     else if (_orbId === 1333) { _orbVel = _ballBase * 1.34; }
-                    else if (_orbId === 84) { _orbVel = _ballBase * 0.4; _flipAfter = true; }
-                    else if (_orbId === 1022) { _orbVel = _ballBase; _flipBefore = true; } // was: _ballBase * -1, _flipAfter = true
+                    else if (_orbId === 84) { _orbVel = _ballBase * 0.9; _flipAfter = true; }
+                    else if (_orbId === 1022) { _orbVel = _ballBase; _flipBefore = true; }
                     else if (_orbId === 1330) { _orbVel = -30; }
                 } else if (this.p.isUfo) {
                     const _ufoYellowOrb = this.p.isMini ? 17.888 : 22.36;
@@ -4552,7 +4657,7 @@ if (this.p.isFlying || this.p.isUfo) {
                   this.p.ballNormalRotate = this.p.mirrored ? -gravityDir : gravityDir;
                   this.p.ballShouldRotate = true;
                   this.p.ballRotateOpposite = true;
-                  this.p.ballRotation2 = 10;
+                  this.p.ballRotation2 = 0;
                 }
                 this.runRotateAction();
                 _boostedThisStep = true;
@@ -4567,8 +4672,23 @@ if (this.p.isFlying || this.p.isUfo) {
             this._setDashHoldTicks(gameObj, 0);
           }
         } else if (_colType === coinType) {
+          if (window.noClip) continue;
           if (!this._isObjectActivated(gameObj)) {
+            const isEditorSession = !!window.isEditor;
+            if (gameObj.secretCoinId !== undefined && this._scene?._practicedMode?.practiceMode) {
+              continue;
+            }
+            if (!isEditorSession && gameObj.userCoinId !== undefined && this._scene?._practicedMode?.practiceMode) {
+              continue;
+            }
+            if (gameObj.secretCoinId !== undefined && !gameObj._secretCoinCompleted && !this._gameLayer.tryCollectSecretCoin(gameObj)) {
+              continue;
+            }
+            if (gameObj.userCoinId !== undefined && !gameObj._userCoinCompleted && !this._gameLayer.tryCollectUserCoin(gameObj)) {
+              continue;
+            }
             this._setObjectActivated(gameObj, true);
+            this._orbpadHitEffect(gameObj);
             try {
               const _coinSpr = this._gameLayer._coinSprites.find(s => s && s.active && Math.abs(s._coinWorldX - gameObj.x) < 2 && Math.abs(s._coinWorldY - gameObj.y) < 2);
               if (_coinSpr && _coinSpr.scene) {
@@ -4616,19 +4736,11 @@ if (this.p.isFlying || this.p.isUfo) {
           return;
         } else if (_colType === slopeType) {
           const slopeResult = this._handleSlopeCollision(
-            gameObj, pieceWidth, playersY, playersLastY, left, right, top, bottom, playerSize, waveHitSize, gamemodeAddition, previousWorldX
+            gameObj, pieceWidth, playersY, playersLastY, left, right, top, bottom, playerSize, waveHitSize, gamemodeAddition
           );
           if (slopeResult.died) {
-            if (slopeResult.immediate) {
-              if (window.noClip) {
-                this.p.diedThisFrame = true;
-                continue;
-              }
-              this.killPlayer();
-              return;
-            }
-            _slopeKillPending = true;
-            continue;
+            this.killPlayer();
+            return;
           }
           if (slopeResult.landed && slopeResult.candidate) {
             const cand = slopeResult.candidate;
