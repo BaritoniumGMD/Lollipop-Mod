@@ -11493,6 +11493,123 @@ window.allobjects = function() {
     "default_z_layer": 5,
     "default_z_order": 2
   },
+  "675": {
+    "black": true,
+    "children": [
+      {
+        "frame": "blackCogwheel_01_001.png",
+        "localDy": 0,
+        "cant_color": true,
+        "tint": 65280,
+        "z": 1
+      },
+      {
+        "frame": "blackCogwheel_01_color_001.png",
+        "localDy": 0,
+        "tint": 0,
+        "z": -1,
+        "rot": 90
+      },
+      {
+        "frame": "blackCogwheel_01_color_001.png",
+        "localDy": 0,
+        "tint": 0,
+        "z": -1,
+        "rot": 180
+      },
+            {
+        "frame": "blackCogwheel_01_color_001.png",
+        "localDy": 0,
+        "tint": 0,
+        "z": -1,
+        "rot": 270
+      },
+      {
+        "frame": "blackCogwheel_01_001.png",
+        "localDy": 0,
+        "tint": 65280,
+        "cant_color": true,
+        "z": 1,
+        "rot": 90
+      },
+      {
+        "frame": "blackCogwheel_01_001.png",
+        "localDy": 0,
+        "cant_color": true,
+        "tint": 65280,
+        "z": 1,
+        "rot": 180
+      },
+            {
+        "frame": "blackCogwheel_01_001.png",
+        "localDy": 0,
+        "cant_color": true,
+        "tint": 65280,
+        "z": 1,
+        "rot": 270
+      },
+    ],
+    "cant_color": true,
+    "default_base_color_channel": 1004,
+    "default_detail_color_channel": 1010,
+    "frame": "blackCogwheel_01_color_001.png",
+    "glow_frame": "blackCogwheel_01_glow_001.png",
+    "gridH": 1.3666666746139526,
+    "gridW": 1.3666666746139526,
+    "spritesheet": "GJ_GameSheet-uhd",
+    "type": "hazard",
+    "z": 1,
+    "hitbox_radius": 32,
+    "default_z_layer": 5,
+    "default_z_order": 1
+  },
+    "676": {
+    "black": true,
+    "children": [
+      {
+        "frame": "blackCogwheel_02_001.png",
+        "localDy": 0,
+        "cant_color": true,
+        "tint": 65280,
+        "z": -1
+      }
+    ],
+    "cant_color": true,
+    "default_base_color_channel": 1004,
+    "default_detail_color_channel": 1010,
+    "frame": "blackCogwheel_02_color_001.png",
+    "glow_frame": "blackCogwheel_02_glow_001.png",
+    "gridH": 1.7666666507720947,
+    "gridW": 1.7333333492279053,
+    "spritesheet": "GJ_GameSheet-uhd",
+    "type": "hazard",
+    "z": 1,
+    "hitbox_radius": 17.510000228881836,
+    "default_z_layer": 5,
+    "default_z_order": 1
+  },
+  "677": {
+    "children": [
+      {
+        "frame": "blackCogwheel_03_001.png",
+        "localDy": 0,
+        "z": -1
+      }
+    ],
+    "default_base_color_channel": 1004,
+    "black": true,
+    "default_detail_color_channel": 1010,
+    "frame": "blackCogwheel_03_color_001.png",
+    "glow_frame": "blackCogwheel_03_glow_001.png",
+    "gridH": 1.2999999523162842,
+    "gridW": 1.2999999523162842,
+    "spritesheet": "GJ_GameSheet-uhd",
+    "type": "hazard",
+    "z": 1,
+    "hitbox_radius": 12.479999542236328,
+    "default_z_layer": 5,
+    "default_z_order": 1
+  },
   "678": {
     "can_color": true,
     "children": [
