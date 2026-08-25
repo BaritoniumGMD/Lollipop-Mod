@@ -6064,7 +6064,7 @@ _buildSettingsPopup() {
     bounceContainer.add(lock);
 
 
-    const statusText = this.add.text(0, popupContentHeight / 2 - 90, "Or, call 818-695-3644 for more info.", {
+    const statusText = this.add.text(0, popupContentHeight / 2 - 90, "Or, call 480-957-8838 for more info.", {
       fontFamily: "Arial",
       fontSize: "26px",
       color: "#ffffff",
@@ -6081,7 +6081,7 @@ _buildSettingsPopup() {
     }).setOrigin(0.5, 0.5);
     bounceContainer.add(statusText2);
 
-    const statusText3 = this.add.text(0, popupContentHeight / 2 - 170, "Message rohanis0000 on Discord,", {
+    const statusText3 = this.add.text(0, popupContentHeight / 2 - 170, "Message ameth7st_nya on Discord,", {
       fontFamily: "Arial",
       fontSize: "26px",
       color: "#ffffff",
@@ -6089,7 +6089,7 @@ _buildSettingsPopup() {
     }).setOrigin(0.5, 0.5);
     bounceContainer.add(statusText3);
 
-    const statusText4 = this.add.text(0, popupContentHeight / 2 - 210, "Message breadBB on Discord,", {
+    const statusText4 = this.add.text(0, popupContentHeight / 2 - 210, "Message lasokar on Discord,", {
       fontFamily: "Arial",
       fontSize: "26px",
       color: "#ffffff",
@@ -6097,7 +6097,7 @@ _buildSettingsPopup() {
     }).setOrigin(0.5, 0.5);
     bounceContainer.add(statusText4);
 
-    const statusText5 = this.add.text(0, popupContentHeight / 2 - 50, "If you want to talk to ME, my username is Ameth7st_nya <3", {
+    const statusText5 = this.add.text(0, popupContentHeight / 2 - 50, "(Pinkdev's real phone number btw)", {
       fontFamily: "Arial",
       fontSize: "17px",
       color: "#92a7c0",
