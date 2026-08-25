@@ -6480,6 +6480,7 @@ _showwippopup() {
       { text: "Ufo rotation changed", scale: 0.75, },
       { text: "Unlockable Levels", scale: 0.7, },
       { text: "Saws optimized", scale: 0.75, },
+      { text: "Special suprise in Blast Processing...", scale: 0.6, },
       { text: "Rate, Help, and Songs menu", scale: 0.75, },
       { text: "Songs is empty- ;-;", scale: 0.5, color: 0x666666},
       { text: "Default Mini Icon", scale: 0.75, },
