@@ -3514,7 +3514,7 @@ if (this.p.isFlying || this.p.isUfo) {
       if (this.playerIsFalling()) {
         this.p.canJump = false;
       }
-      const gravityScale = this.p.isMini ? 0.975 : 1; //temp
+      const gravityScale = this.p.isMini ? 0.957 : 1; //temp
       this.p.yVelocity -= p * _0x3d1c6f * gravityScale * this.flipMod();
       if (this.p.gravityFlipped) {
         this.p.yVelocity = Math.min(this.p.yVelocity, 30);
