@@ -4506,6 +4506,19 @@ if (this.p.isFlying || this.p.isUfo) {
               this.runRotateAction();
               _boostedThisStep = true;
             }
+            if (gameObj._padParticleEmitter) {
+              const origX = gameObj._padParticleEmitter.x;
+              const origY = gameObj._padParticleEmitter.y;
+              const hitX = this._scene._playerWorldX;
+              const hitY = b(this.p.y) + (this.p.gravityFlipped ? -24 : 24);
+              if (typeof gameObj._padParticleEmitter.emitParticleAt === "function") {
+                gameObj._padParticleEmitter.emitParticleAt(hitX, hitY, 24);
+              } else {
+                gameObj._padParticleEmitter.explode(24, hitX, hitY);
+                gameObj._padParticleEmitter.start();
+                gameObj._padParticleEmitter.setPosition(origX, origY);
+              }
+            }
           }
         } else if (_colType === jumpRingType) {
           const _orbId = gameObj.orbId;
