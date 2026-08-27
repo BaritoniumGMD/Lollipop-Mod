@@ -2446,6 +2446,16 @@ window.LevelObject = class LevelObject {
 
       registerAnimatedSprite(sprite, objectDef);
 
+      if (objectDef && objectDef.type === padType) {
+        if (this.objects && this.objects.length) {
+          const lastCollider = this.objects[this.objects.length - 1];
+          if (lastCollider && lastCollider._padParticleEmitter) {
+            sprite._padParticleEmitter = lastCollider._padParticleEmitter;
+            lastCollider._padParticleEmitter._padSprite = sprite;
+          }
+        }
+      }
+
       if (objectDef && objectDef.type === ringType) {
         sprite.setScale(0.75);
         sprite._eeAudioScale = true;
@@ -3041,6 +3051,14 @@ window.LevelObject = class LevelObject {
         if (levelObj.color1 > 0) {
           if (!this._colorChannelSprites[levelObj.color1]) this._colorChannelSprites[levelObj.color1] = [];
           this._colorChannelSprites[levelObj.color1].push(_padEmitter);
+        }
+        const objGids = levelObj.groups ? String(levelObj.groups).split(".").map(Number).filter(n => n > 0) : null;
+        if (objGids && objGids.length) {
+          _padEmitter._eeGroups = objGids;
+          for (const gid of objGids) {
+            if (!this._groupSprites[gid]) this._groupSprites[gid] = [];
+            this._groupSprites[gid].push(_padEmitter);
+          }
         }
         this.topContainer.add(_padEmitter);
       }
@@ -4010,7 +4028,11 @@ window.LevelObject = class LevelObject {
         if (spr._eeActive) continue;
         const baseAlpha = spr._eeOrigAlpha ?? 1;
         const targetAlpha = baseAlpha * op * (spr._eeIsGlowSprite ? this._getGlowAlphaMultiplier() : 1);
-        spr.setAlpha(targetAlpha);
+        if (typeof spr.setAlpha === "function") spr.setAlpha(targetAlpha);
+        if (spr._padParticleEmitter) {
+          if (typeof spr._padParticleEmitter.setAlpha === "function") spr._padParticleEmitter.setAlpha(targetAlpha);
+          if (typeof spr._padParticleEmitter.setVisible === "function") spr._padParticleEmitter.setVisible(targetAlpha > 0.01);
+        }
       }
     }
   }
@@ -4025,7 +4047,11 @@ window.LevelObject = class LevelObject {
         if (spr._eeActive) continue;
         const baseAlpha = spr._eeOrigAlpha ?? 1;
         const targetAlpha = baseAlpha * (spr._eeIsGlowSprite ? this._getGlowAlphaMultiplier() : 1);
-        spr.setAlpha(targetAlpha);
+        if (typeof spr.setAlpha === "function") spr.setAlpha(targetAlpha);
+        if (spr._padParticleEmitter) {
+          if (typeof spr._padParticleEmitter.setAlpha === "function") spr._padParticleEmitter.setAlpha(1);
+          if (typeof spr._padParticleEmitter.setVisible === "function") spr._padParticleEmitter.setVisible(true);
+        }
       }
     }
   }
@@ -4192,8 +4218,10 @@ window.LevelObject = class LevelObject {
           const pulseHex = (pr << 16) | (pg << 8) | pb;
           for (const spr of sprites) {
             if (!spr || !spr.active) continue;
-            if (intensity > 0.01) { spr.setTint(pulseHex); spr._eePulsed = true; }
-            else { spr.clearTint(); spr._eePulsed = false; }
+            if (typeof spr.setTint === "function") {
+              if (intensity > 0.01) { spr.setTint(pulseHex); spr._eePulsed = true; }
+              else if (typeof spr.clearTint === "function") { spr.clearTint(); spr._eePulsed = false; }
+            }
           }
         }
       } else if (trig.targetType === 0 && trig.targetChannel > 0 && colorManager) {
@@ -4209,7 +4237,9 @@ window.LevelObject = class LevelObject {
           if (chSprites) {
             for (const spr of chSprites) {
               if (!spr || !spr.active) continue;
-              spr.setTint(pulseHex); spr._eePulsed = true;
+              if (typeof spr.setTint === "function") {
+                spr.setTint(pulseHex); spr._eePulsed = true;
+              }
             }
           }
         }
@@ -4217,7 +4247,7 @@ window.LevelObject = class LevelObject {
       if (pulse.elapsed >= pulse.totalDuration) {
         if (trig.targetType === 1 && trig.targetGroup > 0) {
           const sprites = this._groupSprites[trig.targetGroup];
-          if (sprites) for (const spr of sprites) { if (spr && spr.active) { spr.clearTint(); spr._eePulsed = false; } }
+          if (sprites) for (const spr of sprites) { if (spr && spr.active && typeof spr.clearTint === "function") { spr.clearTint(); spr._eePulsed = false; } }
         }
         if (trig.targetType === 0 && trig.targetChannel > 0) {
           const chSprites = this._colorChannelSprites[trig.targetChannel];
@@ -4250,7 +4280,7 @@ window.LevelObject = class LevelObject {
         if (spr._isSaw) continue;
         if (spr._isBlack && !spr._canColor) continue;
         if (spr._blackDefault && typeof colorManager.hasColor === "function" && !colorManager.hasColor(chId)) continue;
-        spr.setTint(hex);
+        if (typeof spr.setTint === "function") spr.setTint(hex);
       }
     }
   }
