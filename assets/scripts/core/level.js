@@ -2446,6 +2446,16 @@ window.LevelObject = class LevelObject {
 
       registerAnimatedSprite(sprite, objectDef);
 
+      if (objectDef && objectDef.type === padType) {
+        if (this.objects && this.objects.length) {
+          const lastCollider = this.objects[this.objects.length - 1];
+          if (lastCollider && lastCollider._padParticleEmitter) {
+            sprite._padParticleEmitter = lastCollider._padParticleEmitter;
+            lastCollider._padParticleEmitter._padSprite = sprite;
+          }
+        }
+      }
+
       if (objectDef && objectDef.type === ringType) {
         sprite.setScale(0.75);
         sprite._eeAudioScale = true;
@@ -2978,6 +2988,80 @@ window.LevelObject = class LevelObject {
       this.objects.push(padObj);
       hasCollisionEntry = true;
       this._addCollisionToSection(padObj);
+      const _padId = parseInt(levelObj.id ?? 0, 10);
+      if ([35, 67, 140, 1332, 3005].includes(_padId) && !window.enableLDM && !window.isEditor && !scene?._editorPlaytestActive) {
+        const _padW = objectDef.gridW * a;
+        let _padTint = 0xffffff;
+        if (levelObj.color1 > 0 && scene._colorManager) {
+          _padTint = scene._colorManager.getHex(levelObj.color1);
+        } else if (_padId === 35) {
+          _padTint = 0xffcc00;
+        } else if (_padId === 67) {
+          _padTint = 0x00ffff;
+        } else if (_padId === 1332) {
+          _padTint = 0xff3344;
+        } else if (_padId === 140) {
+          _padTint = 0xff33aa;
+        } else if (_padId === 3005) {
+          _padTint = 0xa833ff;
+        }
+        const rotDeg = ((levelObj.rot || 0) % 360 + 360) % 360;
+        const isUpsideDown = normRot => normRot === 180 || (levelObj.flipY && normRot === 0);
+        let minAngle = 255, maxAngle = 285;
+        let gravY = -500, gravX = 0;
+        let offsetY = -2, offsetX = 0;
+        if (isUpsideDown(rotDeg)) {
+          minAngle = 60;
+          maxAngle = 120;
+          gravY = 500;
+          offsetY = 2;
+        } else if (rotDeg === 90) {
+          minAngle = -30;
+          maxAngle = 30;
+          gravY = 0;
+          gravX = 500;
+          offsetX = 2;
+        } else if (rotDeg === 270) {
+          minAngle = 150;
+          maxAngle = 210;
+          gravY = 0;
+          gravX = -500;
+          offsetX = -2;
+        }
+        const _padEmitter = scene.add.particles(worldX + offsetX, b(worldY) + offsetY, "GJ_WebSheet", {
+          frame: "square.png",
+          lifespan: { min: 250, max: 450 },
+          speed: { min: 180, max: 220 },
+          angle: { min: minAngle, max: maxAngle },
+          x: rotDeg === 90 || rotDeg === 270 ? 0 : { min: -_padW / 2, max: _padW / 2 },
+          y: rotDeg === 90 || rotDeg === 270 ? { min: -_padW / 2, max: _padW / 2 } : 0,
+          scale: { start: 0.5, end: 0 },
+          alpha: { start: 0.85, end: 0 },
+          gravityX: gravX,
+          gravityY: gravY,
+          frequency: 24,
+          tint: _padTint,
+          blendMode: Phaser.BlendModes.ADD,
+          emitting: true
+        });
+        _padEmitter.setDepth(12);
+        _padEmitter.setScrollFactor(0);
+        padObj._padParticleEmitter = _padEmitter;
+        padObj.emitters = [_padEmitter];
+        if (levelObj.color1 > 0) {
+          if (!this._colorChannelSprites[levelObj.color1]) this._colorChannelSprites[levelObj.color1] = [];
+          this._colorChannelSprites[levelObj.color1].push(_padEmitter);
+        }
+        const objGids = levelObj.groups ? String(levelObj.groups).split(".").map(Number).filter(n => n > 0) : null;
+        if (objGids && objGids.length) {
+          _padEmitter._eeGroups = objGids;
+          for (const gid of objGids) {
+            if (!this._groupSprites[gid]) this._groupSprites[gid] = [];
+            this._groupSprites[gid].push(_padEmitter);
+          }
+        }
+        this.topContainer.add(_padEmitter);
+      }
     } else if (objectDef.type === ringType) {
       const orbW = objectDef.gridW * a;
       const orbH = objectDef.gridH * a;
@@ -3944,7 +4028,11 @@ window.LevelObject = class LevelObject {
         if (spr._eeActive) continue;
         const baseAlpha = spr._eeOrigAlpha ?? 1;
         const targetAlpha = baseAlpha * op * (spr._eeIsGlowSprite ? this._getGlowAlphaMultiplier() : 1);
-        spr.setAlpha(targetAlpha);
+        if (typeof spr.setAlpha === "function") spr.setAlpha(targetAlpha);
+        if (spr._padParticleEmitter) {
+          if (typeof spr._padParticleEmitter.setAlpha === "function") spr._padParticleEmitter.setAlpha(targetAlpha);
+          if (typeof spr._padParticleEmitter.setVisible === "function") spr._padParticleEmitter.setVisible(targetAlpha > 0.01);
+        }
       }
     }
   }
@@ -3959,7 +4047,11 @@ window.LevelObject = class LevelObject {
         if (spr._eeActive) continue;
         const baseAlpha = spr._eeOrigAlpha ?? 1;
         const targetAlpha = baseAlpha * (spr._eeIsGlowSprite ? this._getGlowAlphaMultiplier() : 1);
-        spr.setAlpha(targetAlpha);
+        if (typeof spr.setAlpha === "function") spr.setAlpha(targetAlpha);
+        if (spr._padParticleEmitter) {
+          if (typeof spr._padParticleEmitter.setAlpha === "function") spr._padParticleEmitter.setAlpha(1);
+          if (typeof spr._padParticleEmitter.setVisible === "function") spr._padParticleEmitter.setVisible(true);
+        }
       }
     }
   }
@@ -4126,8 +4218,10 @@ window.LevelObject = class LevelObject {
           const pulseHex = (pr << 16) | (pg << 8) | pb;
           for (const spr of sprites) {
             if (!spr || !spr.active) continue;
-            if (intensity > 0.01) { spr.setTint(pulseHex); spr._eePulsed = true; }
-            else { spr.clearTint(); spr._eePulsed = false; }
+            if (typeof spr.setTint === "function") {
+              if (intensity > 0.01) { spr.setTint(pulseHex); spr._eePulsed = true; }
+              else if (typeof spr.clearTint === "function") { spr.clearTint(); spr._eePulsed = false; }
+            }
           }
         }
       } else if (trig.targetType === 0 && trig.targetChannel > 0 && colorManager) {
@@ -4143,7 +4237,9 @@ window.LevelObject = class LevelObject {
           if (chSprites) {
             for (const spr of chSprites) {
               if (!spr || !spr.active) continue;
-              spr.setTint(pulseHex); spr._eePulsed = true;
+              if (typeof spr.setTint === "function") {
+                spr.setTint(pulseHex); spr._eePulsed = true;
+              }
             }
           }
         }
@@ -4151,7 +4247,7 @@ window.LevelObject = class LevelObject {
       if (pulse.elapsed >= pulse.totalDuration) {
         if (trig.targetType === 1 && trig.targetGroup > 0) {
           const sprites = this._groupSprites[trig.targetGroup];
-          if (sprites) for (const spr of sprites) { if (spr && spr.active) { spr.clearTint(); spr._eePulsed = false; } }
+          if (sprites) for (const spr of sprites) { if (spr && spr.active && typeof spr.clearTint === "function") { spr.clearTint(); spr._eePulsed = false; } }
         }
         if (trig.targetType === 0 && trig.targetChannel > 0) {
           const chSprites = this._colorChannelSprites[trig.targetChannel];
@@ -4184,7 +4280,7 @@ window.LevelObject = class LevelObject {
         if (spr._isSaw) continue;
         if (spr._isBlack && !spr._canColor) continue;
         if (spr._blackDefault && typeof colorManager.hasColor === "function" && !colorManager.hasColor(chId)) continue;
-        spr.setTint(hex);
+        if (typeof spr.setTint === "function") spr.setTint(hex);
       }
     }
   }
@@ -4428,6 +4524,11 @@ window.LevelObject = class LevelObject {
       }
       if (_0x3d473e.userCoinId !== undefined) {
         _0x3d473e.activated = false;
+      }
+      if (_0x3d473e._padParticleEmitter) {
+        if (typeof _0x3d473e._padParticleEmitter.start === "function") {
+          _0x3d473e._padParticleEmitter.start();
+        }
       }
     }
     this._secretCoinRunCollected.clear();

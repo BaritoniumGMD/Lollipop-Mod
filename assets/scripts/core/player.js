@@ -2429,6 +2429,48 @@ if (this.p.isFlying || this.p.isUfo) {
       }
     });
   }
+
+  playGravityEffect(toUp) {
+    if (this._scene?._editorPlaytestActive || window.enableLDM || !this._scene) return;
+    const scene = this._scene;
+    const color = toUp ? 0xffff00 : 0x00ffff;
+    const lineCount = 14;
+    const sWidth = typeof screenWidth !== "undefined" ? screenWidth : (scene.scale?.width || 100);
+    const sHeight = typeof screenHeight !== "undefined" ? screenHeight : (scene.scale?.height || 600);
+    const step = (sWidth - 60) / lineCount;
+
+    const startY = toUp ? sHeight + 95 : -95;
+    const targetY = toUp ? -95 : sHeight + 95;
+
+    const container = scene.add.container(0, startY).setDepth(30).setScrollFactor(0);
+
+    for (let i = 0; i < lineCount; i++) {
+      const lineX = 32 - sWidth * 0 + i * step + Math.random() * step;
+      const yOff = (Math.random() * 1 - 1) * 10;
+      const scaleX = Math.random() * 14 + 2;
+      const scaleY = Math.random() * 1 + 2;
+      const alpha = (60 + Math.random() * 60) / 255;
+      const spr = scene.add.image(lineX, yOff, "gravityLine_001")
+        .setTint(color)
+        .setScale(scaleX, scaleY)
+        .setAlpha(alpha)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setFlipY(!toUp);
+      container.add(spr);
+    }
+
+    scene.tweens.add({
+      targets: container,
+      y: targetY,
+      alpha: 0,
+      duration: 400,
+      ease: "Quad.Out",
+      onComplete: () => {
+        container.destroy();
+      }
+    });
+  }
+
   killPlayer() {
     if (this.p.isDead || this._scene._macroBot?.playing) {
       return;
@@ -4342,6 +4384,9 @@ if (this.p.isFlying || this.p.isUfo) {
               this.p.ballShouldRotate = true;
               this.p.ballRotateOpposite = true;
             }
+            if (this.p.gravityFlipped) {
+              this.playGravityEffect(false);
+            }
             this.flipGravity(false, 0.5);
           }
         } else if (_colType === "portal_gravity_up") {
@@ -4351,6 +4396,9 @@ if (this.p.isFlying || this.p.isUfo) {
             if (this.p.isBall) {
               this.p.ballShouldRotate = true;
               this.p.ballRotateOpposite = true;
+            }
+            if (!this.p.gravityFlipped) {
+              this.playGravityEffect(true);
             }
             this.flipGravity(true, 0.5);
           }
@@ -4362,6 +4410,7 @@ if (this.p.isFlying || this.p.isUfo) {
               this.p.ballShouldRotate = true;
               this.p.ballRotateOpposite = true;
             }
+            this.playGravityEffect(!this.p.gravityFlipped);
             this.flipGravity(!this.p.gravityFlipped, 0.5);
           }
         } else if (_colType === "portal_mirror_on") {
@@ -4445,6 +4494,7 @@ if (this.p.isFlying || this.p.isUfo) {
               }
               this.flipGravity(!this.p.gravityFlipped, 1.0);
               this._syncOtherDualGravityForBlueBoost();
+              this.playGravityEffect(this.p.gravityFlipped);
               this.p.yVelocity = 0;
               this.p.onGround = false;
               this.p.canJump = false;
@@ -4498,13 +4548,29 @@ if (this.p.isFlying || this.p.isUfo) {
               }
               if (_padFlip) {
                 this.flipGravity(!this.p.gravityFlipped);
-                if (_padId === 67) this._syncOtherDualGravityForBlueBoost();
+                if (_padId === 67) {
+                  this._syncOtherDualGravityForBlueBoost();
+                  this.playGravityEffect(this.p.gravityFlipped);
+                }
               }
               if (_padNextTickVel !== null) {
                 this.p.pendingVelocity = _padNextTickVel;
               }
               this.runRotateAction();
               _boostedThisStep = true;
+            }
+            if (gameObj._padParticleEmitter) {
+              const origX = gameObj._padParticleEmitter.x;
+              const origY = gameObj._padParticleEmitter.y;
+              const hitX = this._scene._playerWorldX;
+              const hitY = b(this.p.y) + (this.p.gravityFlipped ? -24 : 24);
+              if (typeof gameObj._padParticleEmitter.emitParticleAt === "function") {
+                gameObj._padParticleEmitter.emitParticleAt(hitX, hitY, 24);
+              } else {
+                gameObj._padParticleEmitter.explode(24, hitX, hitY);
+                gameObj._padParticleEmitter.start();
+                gameObj._padParticleEmitter.setPosition(origX, origY);
+              }
             }
           }
         } else if (_colType === jumpRingType) {
@@ -4571,9 +4637,11 @@ if (this.p.isFlying || this.p.isUfo) {
                 if (!this.p.gravityFlipped) {
                   this.p.y = _spCeilY - _spPlayerSize;
                   this.flipGravity(true, 1.0);
+                  this.playGravityEffect(true);
                 } else {
                   this.p.y = _spFloorY + _spPlayerSize;
                   this.flipGravity(false, 1.0);
+                  this.playGravityEffect(false);
                 }
                 this._syncOtherDualGravityForBlueBoost();
                 this.p.yVelocity = 0;
@@ -4587,6 +4655,7 @@ if (this.p.isFlying || this.p.isUfo) {
                 if (_orbId === 84 || _orbId === 1022) {
                   this.flipGravity(!this.p.gravityFlipped);
                   this._syncOtherDualGravityForBlueBoost();
+                  this.playGravityEffect(this.p.gravityFlipped);
                   _boostedThisStep = true;
                   this._markActivatedOrbSprites(gameObj);
                 }
@@ -4647,6 +4716,7 @@ if (this.p.isFlying || this.p.isUfo) {
                 if (_flipBefore) {
                   this.flipGravity(!this.p.gravityFlipped);
                   this._syncOtherDualGravityForBlueBoost();
+                  this.playGravityEffect(this.p.gravityFlipped);
                   this.p.yVelocity = this.flipMod() * _orbVel;
                 } else {
                   this.p.yVelocity = _fm * _orbVel;
@@ -4666,6 +4736,7 @@ if (this.p.isFlying || this.p.isUfo) {
                 if (_flipAfter) {
                   this.flipGravity(!this.p.gravityFlipped);
                   this._syncOtherDualGravityForBlueBoost();
+                  this.playGravityEffect(this.p.gravityFlipped);
                 }
                 this._markActivatedOrbSprites(gameObj);
               }
