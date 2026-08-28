@@ -2433,9 +2433,9 @@ if (this.p.isFlying || this.p.isUfo) {
   playGravityEffect(toUp) {
     if (this._scene?._editorPlaytestActive || window.enableLDM || !this._scene) return;
     const scene = this._scene;
-    const color = toUp ? 0x00ffff : 0xffff00;
-    const lineCount = 22;
-    const sWidth = typeof screenWidth !== "undefined" ? screenWidth : (scene.scale?.width || 800);
+    const color = toUp ? 0xffff00 : 0x00ffff;
+    const lineCount = 14;
+    const sWidth = typeof screenWidth !== "undefined" ? screenWidth : (scene.scale?.width || 100);
     const sHeight = typeof screenHeight !== "undefined" ? screenHeight : (scene.scale?.height || 600);
     const step = (sWidth - 60) / lineCount;
 
@@ -2445,11 +2445,11 @@ if (this.p.isFlying || this.p.isUfo) {
     const container = scene.add.container(0, startY).setDepth(30).setScrollFactor(0);
 
     for (let i = 0; i < lineCount; i++) {
-      const lineX = 30 - sWidth * 0.5 + i * step + Math.random() * step;
-      const yOff = (Math.random() * 2 - 1) * 10;
-      const scaleX = Math.random() * 4 + 2;
+      const lineX = 32 - sWidth * 0 + i * step + Math.random() * step;
+      const yOff = (Math.random() * 1 - 1) * 10;
+      const scaleX = Math.random() * 14 + 2;
       const scaleY = Math.random() * 1 + 2;
-      const alpha = (50 + Math.random() * 130) / 255;
+      const alpha = (60 + Math.random() * 60) / 255;
       const spr = scene.add.image(lineX, yOff, "gravityLine_001")
         .setTint(color)
         .setScale(scaleX, scaleY)
