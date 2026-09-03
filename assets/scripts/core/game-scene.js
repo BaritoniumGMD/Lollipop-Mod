@@ -5097,6 +5097,7 @@ _buildSettingsPopup() {
     }
 
     var infotextstrings = {
+        "No Wave Trail": "Hides the trail behind the wave. Was previously tied to Low Detail Mode.",
         "Static Colors": "Skips recoloring objects on frames where their color has not changed. Speeds up busy levels, but colors may lag behind on levels that use pulse triggers.",
         "Enable Portal Guide": "Enables extra indicators on portals.",
         "Enable Orb Guide": "Enables extra indicators on orbs.",
@@ -5504,6 +5505,14 @@ _buildSettingsPopup() {
           true,
           "Static Colors"
         );
+        createToggle(container, column1X, startY + (spacingY * 3), "No Wave Trail",
+          () => window.noWaveTrail,
+          (v) => window.noWaveTrail = v,
+          null,
+          25,
+          true,
+          "No Wave Trail"
+        );
         createNumberInput(container, column1X, startY, "Cull Distance",
           () => (typeof window.cullDistance !== 'undefined' ? window.cullDistance : 3),
           (v) => window.cullDistance = v,
@@ -5574,6 +5583,7 @@ _buildSettingsPopup() {
         settingInfoText: window.settingInfoText || {},
         enableLDM: window.enableLDM,
         optimizeColors: !!window.optimizeColors,
+        noWaveTrail: !!window.noWaveTrail,
     };
     localStorage.setItem("gd_settings", JSON.stringify(settings));
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
@@ -5605,6 +5615,7 @@ _buildSettingsPopup() {
         enableMiniIcon: false,
         enableLDM: false,
         optimizeColors: false,
+        noWaveTrail: false,
         cullDistance: 3
     };
 
@@ -5637,6 +5648,7 @@ _buildSettingsPopup() {
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
     window.enableLDM = !!data.enableLDM;
     window.optimizeColors = !!data.optimizeColors;
+    window.noWaveTrail = !!data.noWaveTrail;
   }
   _buildMacroPopup() {
       if (this._macroPopup) return;
