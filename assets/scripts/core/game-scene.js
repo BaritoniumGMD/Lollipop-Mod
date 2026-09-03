@@ -5097,6 +5097,7 @@ _buildSettingsPopup() {
     }
 
     var infotextstrings = {
+        "Static Colors": "Skips recoloring objects on frames where their color has not changed. Speeds up busy levels, but colors may lag behind on levels that use pulse triggers.",
         "Enable Portal Guide": "Enables extra indicators on portals.",
         "Enable Orb Guide": "Enables extra indicators on orbs.",
         "Practice Music Bypass": "Plays normal mode music in practice mode.",
@@ -5487,6 +5488,22 @@ _buildSettingsPopup() {
     };
 
         const buildPerformancePage = (container) => {
+        createToggle(container, column1X, startY + spacingY, "Low Detail Mode",
+          () => window.enableLDM,
+          (v) => window.enableLDM = v,
+          null,
+          25,
+          true,
+          "Low Detail Mode"
+        );
+        createToggle(container, column1X, startY + (spacingY * 2), "Static Colors",
+          () => window.optimizeColors,
+          (v) => window.optimizeColors = v,
+          null,
+          25,
+          true,
+          "Static Colors"
+        );
         createNumberInput(container, column1X, startY, "Cull Distance",
           () => (typeof window.cullDistance !== 'undefined' ? window.cullDistance : 3),
           (v) => window.cullDistance = v,
@@ -5556,6 +5573,7 @@ _buildSettingsPopup() {
         cullDistance: window.cullDistance,
         settingInfoText: window.settingInfoText || {},
         enableLDM: window.enableLDM,
+        optimizeColors: !!window.optimizeColors,
     };
     localStorage.setItem("gd_settings", JSON.stringify(settings));
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
@@ -5586,6 +5604,7 @@ _buildSettingsPopup() {
         enableOrbGuide: false,
         enableMiniIcon: false,
         enableLDM: false,
+        optimizeColors: false,
         cullDistance: 3
     };
 
@@ -5617,6 +5636,7 @@ _buildSettingsPopup() {
     window.useDirectInternet = !!data.useDirectInternet;
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
     window.enableLDM = !!data.enableLDM;
+    window.optimizeColors = !!data.optimizeColors;
   }
   _buildMacroPopup() {
       if (this._macroPopup) return;
@@ -9599,26 +9619,6 @@ _applyMirrorEffect() {
       this._showwippopup();
     });
 
-    const ldmX = _0x2a115c + 160;
-    const ldmY = 495;
-    const ldmCheckOffset = -120;
-    const ldmTextOffset = -80;
-    
-    var ldmIsOn = window.enableLDM;
-    var ldmCheckTexture = ldmIsOn ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png";
-    var ldmCheck = this.add.image(ldmX + ldmCheckOffset, ldmY, "GJ_GameSheet03", ldmCheckTexture).setScale(0.8).setInteractive();
-    var ldmTxt = this.add.bitmapText(ldmX + ldmTextOffset, ldmY, "bigFont", "Low Detail Mode", 25).setOrigin(0, 0.5);
-    this._helplayer.add([ldmCheck, ldmTxt]);
-
-    this._makeBouncyButton(ldmCheck, 0.8, () => {
-        var current = window.enableLDM;
-        window.enableLDM = !current;
-        var newTexture = window.enableLDM ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png";
-        ldmCheck.setTexture("GJ_GameSheet03", newTexture);
-        if (this._saveSettings) {
-            this._saveSettings();
-        }
-    });
 
     const reqbtnX = _0x2a115c + 655;
     const reqbtnY = 495;
