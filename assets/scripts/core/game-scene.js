@@ -4231,7 +4231,7 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
       onDragStart(ptr);
       if (isComingSoonPage()) return;
       const levelId = window.currentlevel?.[2];
-      if (getLevelCoinRequirement(levelId) > (Number(window._totalsecretcoins) || 0)) return;
+      if (!window.unlockAllLevels && getLevelCoinRequirement(levelId) > (Number(window._totalsecretcoins) || 0)) return;
       this.tweens.killTweensOf(cardBounceContainer, "scale");
       this.tweens.add({ targets: cardBounceContainer, scale: 1.26, duration: 300, ease: "Bounce.Out" });
     });
@@ -4295,7 +4295,7 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
 
             const requiredCoins = getLevelCoinRequirement(window.currentlevel?.[2]);
             const collectedCoins = Number(window._totalsecretcoins) || 0;
-            if (requiredCoins > collectedCoins) {
+            if (!window.unlockAllLevels && requiredCoins > collectedCoins) {
               return;
             }
             
@@ -4358,7 +4358,7 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
       const levelId = lvl[2] || "level_1";
       const requiredCoins = getLevelCoinRequirement(levelId);
       const collectedCoins = Number(window._totalsecretcoins) || 0;
-      const levellocked = requiredCoins > collectedCoins;
+      const levellocked = !window.unlockAllLevels && requiredCoins > collectedCoins;
       const levelDifficultyMap = {
         "level_1":         "diffIcon_01_btn_001",
         "level_2":         "diffIcon_01_btn_001",
@@ -5097,6 +5097,7 @@ _buildSettingsPopup() {
     }
 
     var infotextstrings = {
+        "Unlock All Levels": "Lets you play every main level without collecting the secret coins first.",
         "No Wave Trail": "Hides the trail behind the wave. Was previously tied to Low Detail Mode.",
         "Static Colors": "Skips recoloring objects on frames where their color has not changed. Speeds up busy levels, but colors may lag behind on levels that use pulse triggers.",
         "Enable Portal Guide": "Enables extra indicators on portals.",
@@ -5345,6 +5346,14 @@ _buildSettingsPopup() {
           false
         );
 
+        createToggle(container, column2X, startY, "Unlock All Levels",
+          () => window.unlockAllLevels,
+          (v) => window.unlockAllLevels = v,
+          null,
+          25,
+          true,
+            "Unlock All Levels"
+        );
         createToggle(container, column2X, startY + spacingY, "Practice Music Sync",
             () => window.practiceMusicSync,
             (v) => {
@@ -5584,6 +5593,7 @@ _buildSettingsPopup() {
         enableLDM: window.enableLDM,
         optimizeColors: !!window.optimizeColors,
         noWaveTrail: !!window.noWaveTrail,
+        unlockAllLevels: !!window.unlockAllLevels,
     };
     localStorage.setItem("gd_settings", JSON.stringify(settings));
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
@@ -5616,6 +5626,7 @@ _buildSettingsPopup() {
         enableLDM: false,
         optimizeColors: false,
         noWaveTrail: false,
+        unlockAllLevels: false,
         cullDistance: 3
     };
 
@@ -5649,6 +5660,7 @@ _buildSettingsPopup() {
     window.enableLDM = !!data.enableLDM;
     window.optimizeColors = !!data.optimizeColors;
     window.noWaveTrail = !!data.noWaveTrail;
+    window.unlockAllLevels = !!data.unlockAllLevels;
   }
   _buildMacroPopup() {
       if (this._macroPopup) return;
