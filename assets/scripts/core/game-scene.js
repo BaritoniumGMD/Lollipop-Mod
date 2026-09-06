@@ -4231,7 +4231,7 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
       onDragStart(ptr);
       if (isComingSoonPage()) return;
       const levelId = window.currentlevel?.[2];
-      if (!window.unlockAllLevels && getLevelCoinRequirement(levelId) > (Number(window._totalsecretcoins) || 0)) return;
+      if (getLevelCoinRequirement(levelId) > (Number(window._totalsecretcoins) || 0)) return;
       this.tweens.killTweensOf(cardBounceContainer, "scale");
       this.tweens.add({ targets: cardBounceContainer, scale: 1.26, duration: 300, ease: "Bounce.Out" });
     });
@@ -4295,7 +4295,7 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
 
             const requiredCoins = getLevelCoinRequirement(window.currentlevel?.[2]);
             const collectedCoins = Number(window._totalsecretcoins) || 0;
-            if (!window.unlockAllLevels && requiredCoins > collectedCoins) {
+            if (requiredCoins > collectedCoins) {
               return;
             }
             
@@ -4358,7 +4358,7 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
       const levelId = lvl[2] || "level_1";
       const requiredCoins = getLevelCoinRequirement(levelId);
       const collectedCoins = Number(window._totalsecretcoins) || 0;
-      const levellocked = !window.unlockAllLevels && requiredCoins > collectedCoins;
+      const levellocked = requiredCoins > collectedCoins;
       const levelDifficultyMap = {
         "level_1":         "diffIcon_01_btn_001",
         "level_2":         "diffIcon_01_btn_001",
@@ -5097,9 +5097,6 @@ _buildSettingsPopup() {
     }
 
     var infotextstrings = {
-        "Unlock All Levels": "Lets you play every main level without collecting the secret coins first.",
-        "No Wave Trail": "Hides the trail behind the wave. Was previously tied to Low Detail Mode.",
-        "Static Colors": "Skips recoloring objects on frames where their color has not changed. Speeds up busy levels, but colors may lag behind on levels that use pulse triggers.",
         "Enable Portal Guide": "Enables extra indicators on portals.",
         "Enable Orb Guide": "Enables extra indicators on orbs.",
         "Practice Music Bypass": "Plays normal mode music in practice mode.",
@@ -5498,30 +5495,6 @@ _buildSettingsPopup() {
     };
 
         const buildPerformancePage = (container) => {
-        createToggle(container, column1X, startY + spacingY, "Low Detail Mode",
-          () => window.enableLDM,
-          (v) => window.enableLDM = v,
-          null,
-          25,
-          true,
-          "Low Detail Mode"
-        );
-        createToggle(container, column1X, startY + (spacingY * 2), "Static Colors",
-          () => window.optimizeColors,
-          (v) => window.optimizeColors = v,
-          null,
-          25,
-          true,
-          "Static Colors"
-        );
-        createToggle(container, column1X, startY + (spacingY * 3), "No Wave Trail",
-          () => window.noWaveTrail,
-          (v) => window.noWaveTrail = v,
-          null,
-          25,
-          true,
-          "No Wave Trail"
-        );
         createNumberInput(container, column1X, startY, "Cull Distance",
           () => (typeof window.cullDistance !== 'undefined' ? window.cullDistance : 3),
           (v) => window.cullDistance = v,
@@ -5591,9 +5564,6 @@ _buildSettingsPopup() {
         cullDistance: window.cullDistance,
         settingInfoText: window.settingInfoText || {},
         enableLDM: window.enableLDM,
-        optimizeColors: !!window.optimizeColors,
-        noWaveTrail: !!window.noWaveTrail,
-        unlockAllLevels: !!window.unlockAllLevels,
     };
     localStorage.setItem("gd_settings", JSON.stringify(settings));
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
@@ -5624,9 +5594,6 @@ _buildSettingsPopup() {
         enableOrbGuide: false,
         enableMiniIcon: false,
         enableLDM: false,
-        optimizeColors: false,
-        noWaveTrail: false,
-        unlockAllLevels: false,
         cullDistance: 3
     };
 
@@ -5658,9 +5625,6 @@ _buildSettingsPopup() {
     window.useDirectInternet = !!data.useDirectInternet;
     localStorage.setItem("gd_useDirectInternet", String(!!window.useDirectInternet));
     window.enableLDM = !!data.enableLDM;
-    window.optimizeColors = !!data.optimizeColors;
-    window.noWaveTrail = !!data.noWaveTrail;
-    window.unlockAllLevels = !!data.unlockAllLevels;
   }
   _buildMacroPopup() {
       if (this._macroPopup) return;
@@ -6520,56 +6484,21 @@ _showwippopup() {
     */
     const updateEntries = [
       { text: "Update Log", scale: 1, font: "goldFont" },
-      { text: "Coins reworked", scale: 0.75, },
-      { text: "Ufo rotation changed", scale: 0.75, },
-      { text: "Unlockable Levels", scale: 0.7, },
-      { text: "Saws optimized", scale: 0.75, },
-      { text: "Special suprise in Blast Processing...", scale: 0.6, },
-      { text: "Rate, Help, and Songs menu", scale: 0.75, },
-      { text: "Songs is empty- ;-;", scale: 0.5, color: 0x666666},
-      { text: "Default Mini Icon", scale: 0.75, },
-      { text: "New animation plays when-", scale: 0.75, },
-      { text: "-hitting orbs, pads, etc.", scale: 0.75, },
-      { text: "New More Games button-", scale: 0.7, },
-      { text: "-that links Interdimentional", scale: 0.7, },
-      { text: "Links and Notes page coming-", scale: 0.7, color: 0x666666 },
-      { text: "Next PR, still working on them.", scale: 0.7, color: 0x666666 },
-      { text: "Slopes OVERHAULED", scale: 0.75, color: 0xff9944 },
-      { text: "Bug reports are appreciated", scale: 0.75, },
-      { text: "-Bari", scale: 0.75, },
-      { text: "Credits menu fixed :3", scale: 0.75, },
-      { text: "Small Icon Kit changes", scale: 0.75, },
-      { text: "Low Detail Mode", scale: 0.75, },
-      { text: "Object culling changes", scale: 0.75, },
-      { text: "MOST Animated objects", scale: 0.75, },
-      { text: "Added a bunch of missing buttons", scale: 0.7, },
-      { text: "Level select info icon is bouncy now", scale: 0.65, },
-      { text: "Rotation for deco and saws", scale: 0.75, },
-      { text: "Particlesheet added <3", scale: 0.75, },
-      { text: "Better ball rotation ", scale: 0.75, },
-      { text: "Fixed ball noclip too.", scale: 0.75, },
-      { text: "Editor placing offsets", scale: 0.75, },
-      { text: "Pulsing rods reworked a lil", scale: 0.75, },
-      { text: "Breakable blocks break now.", scale: 0.75, },
-      { text: "Fixed objects not showing in editor", scale: 0.65, },
-      { text: "Slopes (very buggy)", scale: 0.75, color: 0xff9944 },
-      { text: "THEY WILL BE FIXED-", scale: 0.75, },
-      { text: "OVER TIME.", scale: 0.75, },
-      { text: "Slopes work in imported-", scale: 0.75, },
-      { text: "levels now (thanks lasokadadyy)", scale: 0.7, },
-      { text: "Fixed SOME objects", scale: 0.75 },
-      { text: "-pinkdih", scale: 0.65, color: 0xFF008E }
+      { text: "Sorry for the 10 hour downtime\ni forgot to change the proxy\nurl because i changed the\nsubdomain - rohanis0000", scale: 0.7, color: 0xaaddff },
+      { text: "To anyone who is wondering\nwhy online features don't work,\nthe worker is constantly being\nused and its request limit\nis hit daily in a short time\ndue to many users using\nthe online levels feature.\nThis has hopefully been\nfixed now with this update.\n- rohanis0000", scale: 0.7, color: 0xaaddff },
+      { text: "Added 2 new proxies to fall back\nto when ones request limit is\n hit to allow you to still\nbe able to use online features.", scale: 0.65 }
     ]; 
     let yPos = 0;
     const lineItems = [];
     updateEntries.forEach(entry => {
       const txt = this.add.bitmapText(0, yPos, entry.font || "bigFont", entry.text, 32)
         .setOrigin(0.5, 0)
+        .setCenterAlign()
         .setScale(entry.scale || 0.65);
       if (entry.color != null) txt.setTint(entry.color);
       contentContainer.add(txt);
       lineItems.push(txt);
-      yPos += Math.round(32 * (entry.scale || 0.65)) + 10;
+      yPos += txt.displayHeight + 10;
     });
     const totalContentH = yPos;
     const maxScrollDown = Math.max(0, totalContentH - scrollAreaH + 16);
@@ -9643,6 +9572,26 @@ _applyMirrorEffect() {
       this._showwippopup();
     });
 
+    const ldmX = _0x2a115c + 160;
+    const ldmY = 495;
+    const ldmCheckOffset = -120;
+    const ldmTextOffset = -80;
+    
+    var ldmIsOn = window.enableLDM;
+    var ldmCheckTexture = ldmIsOn ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png";
+    var ldmCheck = this.add.image(ldmX + ldmCheckOffset, ldmY, "GJ_GameSheet03", ldmCheckTexture).setScale(0.8).setInteractive();
+    var ldmTxt = this.add.bitmapText(ldmX + ldmTextOffset, ldmY, "bigFont", "Low Detail Mode", 25).setOrigin(0, 0.5);
+    this._helplayer.add([ldmCheck, ldmTxt]);
+
+    this._makeBouncyButton(ldmCheck, 0.8, () => {
+        var current = window.enableLDM;
+        window.enableLDM = !current;
+        var newTexture = window.enableLDM ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png";
+        ldmCheck.setTexture("GJ_GameSheet03", newTexture);
+        if (this._saveSettings) {
+            this._saveSettings();
+        }
+    });
 
     const reqbtnX = _0x2a115c + 655;
     const reqbtnY = 495;

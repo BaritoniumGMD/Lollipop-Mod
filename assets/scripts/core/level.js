@@ -3335,7 +3335,6 @@ window.LevelObject = class LevelObject {
     return triggered;
   }
   resetColorTriggers() {
-    this._lastChanHex = {};
     this._colorTriggerIdx = 0;
     this._touchColorTriggerActivated = new Set();
   }
@@ -3542,9 +3541,6 @@ window.LevelObject = class LevelObject {
     }
   }
   updateObjectDebugIds() {
-    const _want = !!(window.showObjectIds && !window.enableLDM);
-    if (this._debugIdsShown === _want) return;
-    this._debugIdsShown = _want;
     if (window.showObjectIds && !window.enableLDM) {
       if (this._debugIdTextsList && this._debugIdTextsList.length > 0) {
         for (const idText of this._debugIdTextsList) {
@@ -4267,14 +4263,10 @@ window.LevelObject = class LevelObject {
   }
 
   applyColorChannels(colorManager) {
-    const _skipStatic = !!window.optimizeColors;
-    if (!this._lastChanHex) this._lastChanHex = {};
     for (const chId in this._colorChannelSprites) {
       const sprites = this._colorChannelSprites[chId];
       if (!sprites || !sprites.length) continue;
       const hex = colorManager.getHex(parseInt(chId, 10));
-      if (_skipStatic && this._lastChanHex[chId] === hex) continue;
-      this._lastChanHex[chId] = hex;
       for (const spr of sprites) {
         if (!spr || !spr.active) continue;
         if (spr._cantColor) continue;
