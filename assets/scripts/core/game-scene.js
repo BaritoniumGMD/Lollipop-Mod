@@ -5346,7 +5346,7 @@ _buildSettingsPopup() {
           false
         );
 
-        createToggle(container, column2X, startY, "Unlock All Levels",
+        createToggle(container, column2X, startY + (spacingY * 2), "Unlock All Levels",
           () => window.unlockAllLevels,
           (v) => window.unlockAllLevels = v,
           null,
