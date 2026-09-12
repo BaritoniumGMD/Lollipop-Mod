@@ -4823,6 +4823,10 @@ if (this.p.isFlying || this.p.isUfo) {
             gameObj, pieceWidth, playersY, playersLastY, left, right, top, bottom, playerSize, waveHitSize, gamemodeAddition
           );
           if (slopeResult.died) {
+            if (window.noClip) {
+              this.p.diedThisFrame = true;
+              continue;
+            }
             this.killPlayer();
             return;
           }
